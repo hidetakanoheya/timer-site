@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ランダムポケモン</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      letter-spacing: 3px;
+      color: #ffd700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #a0a8c0;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: #16213e;
+      border-radius: 24px;
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+
+    .pokemon-id {
+      font-size: 0.85rem;
+      color: #636e8a;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+
+    .pokemon-image-wrap {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 20px;
+      position: relative;
+      background: radial-gradient(circle, rgba(255,215,0,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pokemon-image-wrap img {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+      transition: transform 0.3s ease, opacity 0.3s;
+      filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+    }
+
+    .pokemon-image-wrap img.loading {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+
+    .pokemon-name {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: capitalize;
+      color: #f0f4ff;
+      margin-bottom: 12px;
+    }
+
+    .pokemon-name-ja {
+      font-size: 0.95rem;
+      color: #a0a8c0;
+      margin-bottom: 16px;
+    }
+
+    .types {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .type-badge {
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #fff;
+    }
+
+    .stats {
+      margin-bottom: 28px;
+      text-align: left;
+    }
+
+    .stats h3 {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: #636e8a;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #a0a8c0;
+      width: 90px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-bar-bg {
+      flex: 1;
+      background: #0f1729;
+      border-radius: 10px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .stat-bar {
+      height: 100%;
+      border-radius: 10px;
+      transition: width 0.6s ease;
+    }
+
+    .stat-value {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      width: 32px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .info-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 28px;
+    }
+
+    .info-box {
+      background: #0f1729;
+      border-radius: 12px;
+      padding: 12px 20px;
+      text-align: center;
+    }
+
+    .info-box .label {
+      font-size: 0.7rem;
+      color: #636e8a;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .info-box .value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #e2e8f0;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 50px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    #nextBtn {
+      background: #ffd700;
+      color: #1a1a2e;
+      min-width: 160px;
+    }
+
+    #nextBtn:hover:not(:disabled) { background: #ffe44d; transform: translateY(-2px); }
+    #nextBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #backBtn {
+      background: #2d3748;
+      color: #a0aec0;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    #backBtn:hover { background: #4a5568; transform: translateY(-2px); }
+
+    .error {
+      color: #fc8181;
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, #0f1729 25%, #1a2a4a 50%, #0f1729 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s infinite;
+      border-radius: 8px;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* type colors */
+    .type-normal    { background: #8a8a59; }
+    .type-fire      { background: #f05030; }
+    .type-water     { background: #6890f0; }
+    .type-electric  { background: #f8d030; color: #1a1a2e; }
+    .type-grass     { background: #78c850; color: #1a1a2e; }
+    .type-ice       { background: #98d8d8; color: #1a1a2e; }
+    .type-fighting  { background: #c03028; }
+    .type-poison    { background: #a040a0; }
+    .type-ground    { background: #e0c068; color: #1a1a2e; }
+    .type-flying    { background: #a890f0; }
+    .type-psychic   { background: #f85888; }
+    .type-bug       { background: #a8b820; color: #1a1a2e; }
+    .type-rock      { background: #b8a038; }
+    .type-ghost     { background: #705898; }
+    .type-dragon    { background: #7038f8; }
+    .type-dark      { background: #705848; }
+    .type-steel     { background: #b8b8d0; color: #1a1a2e; }
+    .type-fairy     { background: #ee99ac; color: #1a1a2e; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Random Pokemon</h1>
+    <p>ポケAPIでランダムにポケモンを表示するで！</p>
+  </header>
+
+  <div class="card" id="card">
+    <div class="pokemon-id" id="pokemonId">#---</div>
+    <div class="pokemon-image-wrap">
+      <img id="pokemonImg" src="" alt="" />
+    </div>
+    <div class="pokemon-name" id="pokemonName">Loading...</div>
+    <div class="pokemon-name-ja" id="pokemonNameJa"></div>
+    <div class="types" id="types"></div>
+    <div class="info-row" id="infoRow">
+      <div class="info-box">
+        <div class="label">Height</div>
+        <div class="value" id="height">-</div>
+      </div>
+      <div class="info-box">
+        <div class="label">Weight</div>
+        <div class="value" id="weight">-</div>
+      </div>
+      <div class="info-box">
+        <div class="label">Base Exp</div>
+        <div class="value" id="baseExp">-</div>
+      </div>
+    </div>
+    <div class="stats">
+      <h3>Base Stats</h3>
+      <div id="statsContainer"></div>
+    </div>
+    <div class="buttons">
+      <button id="nextBtn" onclick="loadRandom()" disabled>次のポケモン</button>
+      <a href="index.html" id="backBtn">← トップへ</a>
+    </div>
+    <div class="error" id="errorMsg"></div>
+  </div>
+
+  <script>
+    const TOTAL_POKEMON = 1025;
+
+    const STAT_COLORS = {
+      hp:              '#fc8181',
+      attack:          '#f6ad55',
+      defense:         '#68d391',
+      'special-attack':'63b3ed',
+      'special-defense':'#76e4f7',
+      speed:           '#b794f4',
+    };
+
+    const STAT_LABELS = {
+      hp: 'HP',
+      attack: 'Attack',
+      defense: 'Defense',
+      'special-attack': 'Sp.Atk',
+      'special-defense': 'Sp.Def',
+      speed: 'Speed',
+    };
+
+    async function loadRandom() {
+      const btn = document.getElementById('nextBtn');
+      btn.disabled = true;
+      document.getElementById('errorMsg').textContent = '';
+
+      const id = Math.floor(Math.random() * TOTAL_POKEMON) + 1;
+
+      try {
+        const [pokeRes, speciesRes] = await Promise.all([
+          fetch(`https://pokeapi.co/api/v2/pokemon/${id}`),
+          fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`),
+        ]);
+
+        if (!pokeRes.ok) throw new Error('ポケモンデータの取得に失敗したで');
+        const data = await pokeRes.json();
+
+        let jaName = '';
+        if (speciesRes.ok) {
+          const species = await speciesRes.json();
+          const jaEntry = species.names.find(n => n.language.name === 'ja-Hrkt' || n.language.name === 'ja');
+          if (jaEntry) jaName = jaEntry.name;
+        }
+
+        render(data, jaName);
+      } catch (e) {
+        document.getElementById('errorMsg').textContent = e.message || 'エラーが発生したで…';
+        btn.disabled = false;
+      }
+    }
+
+    function render(data, jaName) {
+      document.getElementById('pokemonId').textContent = `#${String(data.id).padStart(4, '0')}`;
+      document.getElementById('pokemonName').textContent = data.name;
+      document.getElementById('pokemonNameJa').textContent = jaName || '';
+
+      const img = document.getElementById('pokemonImg');
+      const artworkUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${data.id}.png`;
+      img.classList.add('loading');
+      img.src = artworkUrl;
+      img.alt = data.name;
+      img.onload = () => img.classList.remove('loading');
+      img.onerror = () => {
+        img.src = data.sprites.front_default || '';
+        img.classList.remove('loading');
+      };
+
+      const typesEl = document.getElementById('types');
+      typesEl.innerHTML = data.types
+        .map(t => `<span class="type-badge type-${t.type.name}">${t.type.name}</span>`)
+        .join('');
+
+      document.getElementById('height').textContent = `${(data.height / 10).toFixed(1)} m`;
+      document.getElementById('weight').textContent = `${(data.weight / 10).toFixed(1)} kg`;
+      document.getElementById('baseExp').textContent = data.base_experience ?? '-';
+
+      const statsContainer = document.getElementById('statsContainer');
+      statsContainer.innerHTML = data.stats.map(s => {
+        const label = STAT_LABELS[s.stat.name] || s.stat.name;
+        const pct = Math.min(100, Math.round((s.base_stat / 255) * 100));
+        const color = STAT_COLORS[s.stat.name] || '#63b3ed';
+        return `
+          <div class="stat-row">
+            <span class="stat-label">${label}</span>
+            <div class="stat-bar-bg">
+              <div class="stat-bar" style="width:${pct}%;background:${color}"></div>
+            </div>
+            <span class="stat-value">${s.base_stat}</span>
+          </div>`;
+      }).join('');
+
+      document.getElementById('nextBtn').disabled = false;
+    }
+
+    loadRandom();
+  </script>
+</body>
+</html>
