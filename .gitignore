@@ -1,0 +1,9 @@
+node_modules/
+*.xlsx
+*.pptx
+*.png
+package-lock.json
+.claude/
+claude-code-course-materials-2026-04/
+clawd-on-desk/
+create-presentation.js

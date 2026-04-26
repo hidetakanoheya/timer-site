@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タイマー</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      text-align: center;
+      background: #16213e;
+      border-radius: 20px;
+      padding: 50px 60px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      letter-spacing: 4px;
+      color: #a0a8c0;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+    }
+
+    #display {
+      font-size: 5rem;
+      font-weight: 200;
+      letter-spacing: 4px;
+      color: #e2e8f0;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 40px;
+      transition: color 0.3s;
+    }
+
+    #display.running {
+      color: #63b3ed;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    button {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 50px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    #startStop {
+      background: #63b3ed;
+      color: #1a1a2e;
+      min-width: 120px;
+    }
+
+    #startStop:hover { background: #90cdf4; transform: translateY(-2px); }
+    #startStop.active { background: #fc8181; }
+    #startStop.active:hover { background: #feb2b2; }
+
+    #reset {
+      background: #2d3748;
+      color: #a0aec0;
+    }
+
+    #reset:hover { background: #4a5568; transform: translateY(-2px); }
+
+    .lap-section {
+      margin-top: 30px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    #lapBtn {
+      background: #2d3748;
+      color: #a0aec0;
+    }
+
+    #lapBtn:hover { background: #4a5568; transform: translateY(-2px); }
+
+    #lapList {
+      margin-top: 16px;
+      text-align: left;
+    }
+
+    .lap-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #2d3748;
+      font-size: 0.9rem;
+      color: #a0aec0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .lap-item span:first-child { color: #63b3ed; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>STOPWATCH</h1>
+    <div id="display">00:00.00</div>
+    <div class="buttons">
+      <button id="startStop">START</button>
+      <button id="lapBtn">LAP</button>
+      <button id="reset">RESET</button>
+    </div>
+    <div class="lap-section">
+      <div id="lapList"></div>
+    </div>
+  </div>
+
+  <script>
+    let startTime = 0;
+    let elapsed = 0;
+    let timer = null;
+    let running = false;
+    let lapCount = 0;
+
+    const display = document.getElementById('display');
+    const startStopBtn = document.getElementById('startStop');
+    const resetBtn = document.getElementById('reset');
+    const lapBtn = document.getElementById('lapBtn');
+    const lapList = document.getElementById('lapList');
+
+    function format(ms) {
+      const min = Math.floor(ms / 60000);
+      const sec = Math.floor((ms % 60000) / 1000);
+      const cs = Math.floor((ms % 1000) / 10);
+      return `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${String(cs).padStart(2,'0')}`;
+    }
+
+    function tick() {
+      elapsed = Date.now() - startTime;
+      display.textContent = format(elapsed);
+    }
+
+    startStopBtn.addEventListener('click', () => {
+      if (!running) {
+        startTime = Date.now() - elapsed;
+        timer = setInterval(tick, 10);
+        running = true;
+        startStopBtn.textContent = 'STOP';
+        startStopBtn.classList.add('active');
+        display.classList.add('running');
+      } else {
+        clearInterval(timer);
+        running = false;
+        startStopBtn.textContent = 'START';
+        startStopBtn.classList.remove('active');
+        display.classList.remove('running');
+      }
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timer);
+      running = false;
+      elapsed = 0;
+      lapCount = 0;
+      display.textContent = '00:00.00';
+      display.classList.remove('running');
+      startStopBtn.textContent = 'START';
+      startStopBtn.classList.remove('active');
+      lapList.innerHTML = '';
+    });
+
+    lapBtn.addEventListener('click', () => {
+      if (!running) return;
+      lapCount++;
+      const item = document.createElement('div');
+      item.className = 'lap-item';
+      item.innerHTML = `<span>LAP ${lapCount}</span><span>${format(elapsed)}</span>`;
+      lapList.prepend(item);
+    });
+  </script>
+</body>
+</html>
